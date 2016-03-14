@@ -68,8 +68,8 @@ public class hProxy {
         try {
             hSocket = new ServerSocket(portNumber);
             System.out.println("<SYSTEM>: Socket is now running on port " + portNumber + ".");
+            System.out.println("<SYSTEM>: hProxy ready to serve.");
             while (keepRunning) {
-                System.out.println("<SYSTEM>: hProxy ready to serve: ");
                 new hProxyThread(hSocket.accept()).start();
             }
 

@@ -4,7 +4,7 @@ import java.util.*;
 
 public class hProxyThread extends Thread {
     private Socket socket = null;
-    private int host, port;
+    private int port;
     String requestURL;
     private static final int BUFFER_SIZE = 4096;
 
