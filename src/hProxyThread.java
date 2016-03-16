@@ -90,7 +90,7 @@ public class hProxyThread extends Thread {
             // server sends GET request to host, using given directory
             PrintWriter server = new PrintWriter(new BufferedWriter(new OutputStreamWriter(connectionSocket.getOutputStream())));
             System.out.println("<SYSTEM>: Sending GET request to " + requestedURL);
-            server.println("<SYSTEM>: GET " + directory + " HTTP/1.1");
+            server.println("GET " + directory + " HTTP/1.1");
             for (int i = 0; i < httpRequest.size(); i++) {
                 server.println(httpRequest.get(i));
             }
