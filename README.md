@@ -42,6 +42,3 @@ Sites tested:
 - cnn.com (takes a while to load)
 - case.edu (takes a while to load)
 - naver.com
-- 
-
-이베이 아마존 등 여기저기 확인하기
