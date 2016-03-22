@@ -10,6 +10,7 @@ import java.net.*;
  *
  */
 public class hProxy {
+    private static boolean silentMode = false;
 
     // program would be run in a way:
     // $ javac proxyd.java
@@ -48,7 +49,11 @@ public class hProxy {
      * @return whether the arguments are valid or not
      */
     private static boolean checkArguments(String[] argumentArray) {
-        return argumentArray.length > 0 && (argumentArray[0].equals("-port") || argumentArray[0].equals("-p"));
+        for (String argument : argumentArray) {
+            if (argument.equals("-s"))
+                    silentMode = true;
+        }
+        return argumentArray.length > 0 && argumentArray[0].equals("-p");
     }
 
     /**
@@ -71,7 +76,12 @@ public class hProxy {
 
             // here is the sweet spot
             while (keepRunning) {
-                new hProxyThread(hSocket.accept()).start();
+                if (silentMode) {
+                    new hProxyThreadSilent(hSocket.accept()).start();
+                } else {
+                    new hProxyThread(hSocket.accept()).start();
+                }
+
             }
 
             // when done, safely close the socket.
