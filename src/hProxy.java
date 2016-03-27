@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.*;
 
 /**
  * hProxy by hunj (160311)
@@ -10,6 +11,10 @@ import java.net.*;
  *
  */
 public class hProxy {
+    // {hostname => CNAME}
+    public static Hashtable<String, Tuple> record = new Hashtable<String, Tuple>();
+    Timer timer = new Timer();
+
     private static boolean silentMode = false;
 
     // program would be run in a way:
@@ -76,6 +81,8 @@ public class hProxy {
 
             // here is the sweet spot
             while (keepRunning) {
+
+
                 if (silentMode) {
                     new hProxyThreadSilent(hSocket.accept()).start();
                 } else {
@@ -96,18 +103,17 @@ public class hProxy {
         System.exit(-1);
     }
 
+
+    // DNS Patch
+
+    /**
+     * checks if hostname is recorded in DNS. If so, decrease TTL by 1 second, else add a new record.
+     * @param hostname the hostname
+     * @param ipaddress the IP address of that host
+     */
+    public static void addDNSRecord(String hostname, String ipaddress) {
+        if (record.get(hostname) != null) {
+            record.put(hostname, new Tuple(ipaddress, System.currentTimeMillis()));
+        }
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

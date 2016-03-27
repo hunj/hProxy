@@ -3,10 +3,18 @@ import java.io.*;
 import java.util.*;
 
 public class hProxyThread extends Thread {
-    private Socket socket = null;
-    private int port;
+
+    // socket connects to the browser
+    private Socket socket;
+
+    // the URL and port to connect; usually port is 80.
     String requestURL;
+    private int port;
+    String ipAddr;
+
+    // configuration
     private static final int BUFFER_SIZE = 4096;
+    private static final long TTL = 30000;
 
     /**
      * initializer for an instance of hProxyThread.
@@ -59,35 +67,52 @@ public class hProxyThread extends Thread {
 
 
             // default/example
-            String hostname = "eecslinab1.engineering.cwru.edu";
-            String directory = ":hxl224/project1/";
+            String hostname = "-";
+            String directory = "-";
 
             try {
                 // strip "http://"
+
                 String domain = requestedURL.substring(7, requestedURL.length());
+//                ipAddr = InetAddress.getByName(requestedURL).toString();
+
                 count = domain.indexOf("/");
 
                 // hostname = www.case.edu
                 hostname = domain.substring(0, count);
+                System.out.println("<SYSTEM>: Socket for " + hostname);
+
 
                 // the requested file:
                 directory = domain.substring(count, domain.length());
 
-                System.out.println("<SYSTEM>: Socket for " + hostname);
                 System.out.println(directory);
             } catch (Exception e) {
-                System.out.println("< ERR! >: URL \"" + requestedURL + "\" cannot be processed.");
+                System.err.println("< ERR! >: URL " + requestedURL + " cannot be processed: " + e.getMessage());
             }
-
-            System.out.println("<SYSTEM>: Creating socket for " + hostname);
 
             // Here starts the sweet part
             // start connection with URL on port 80
             // *HTTPS (port 443) not supported
+
             Socket connectionSocket = new Socket(hostname, 80);
+            System.out.println("<SYSTEM>: Checking hDNS resolution for " + hostname);
+            if (hProxy.record.containsKey(hostname)) {
+                if (System.currentTimeMillis() - hProxy.record.get(hostname).TTL < TTL) {
+                    System.out.println("<SYSTEM>: hDNS resolution for " + hostname + " found; IP address is: " + ipAddr);;
+                    connectionSocket = new Socket(hProxy.record.get(hostname).ipAddress, 80);
+                } else {
+                    System.out.println("<SYSTEM>: hDNS resolution for " + hostname + " added; IP address is: " + ipAddr);;
+                    hProxy.addDNSRecord(hostname, ipAddr);
+                }
+            }
+
             System.out.println("<SYSTEM>: Socket successfully created.");
 
+
+
             // server sends GET request to host, using given directory
+
             PrintWriter server = new PrintWriter(new BufferedWriter(new OutputStreamWriter(connectionSocket.getOutputStream())));
             System.out.println("<SYSTEM>: Sending GET request to " + requestedURL);
             server.println("GET " + directory + " HTTP/1.1");
@@ -121,7 +146,7 @@ public class hProxyThread extends Thread {
         }
         catch (Exception e) {
             // gotta catch em all
-            System.err.println("< ERR! >: Error occurred:" + e.getMessage());
+            System.err.println("< ERR! >: Error occurred: " + e.getMessage());
         }
     }
 
