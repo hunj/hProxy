@@ -2,16 +2,26 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
-public class hProxyThreadSilent extends Thread {
-    private Socket socket = null;
+class hProxyThreadSilent extends Thread {
+
+    // socket connects to the browser
+    private Socket socket;
+
+    // the URL and port to connect; usually port is 80.
+    String requestURL;
+    private int port;
+    InetAddress ipAddr;
+
+    // configuration
     private static final int BUFFER_SIZE = 4096;
+    private static final long TTL = 30000;
 
     /**
      * initializer for an instance of hProxyThread.
      * @param socket the socket to use for this thread.
      */
-    hProxyThreadSilent (Socket socket) {
-        super("hProxyThreadSilent");
+    hProxyThreadSilent(Socket socket) {
+        super("hProxyThread");
         this.socket = socket;
     }
 
@@ -28,7 +38,7 @@ public class hProxyThreadSilent extends Thread {
             String inputLine;
             int count = 0;
             String requestedURL = "";
-            ArrayList<String> httpRequest = new ArrayList<>();
+            ArrayList<String> httpRequest = new ArrayList<String>();
 
             // get request from client
             while ((inputLine = input.readLine()) != null) {
@@ -36,7 +46,6 @@ public class hProxyThreadSilent extends Thread {
                     StringTokenizer token = new StringTokenizer(inputLine);
                     token.nextToken();
                 } catch (Exception e) {
-                    // give cute notification to user
                     break;
                 }
 
@@ -49,45 +58,48 @@ public class hProxyThreadSilent extends Thread {
                 } else {
                     httpRequest.add(inputLine);
                 }
-                System.out.println(inputLine);
                 count++;
             }
 
 
             // default/example
-            String hostname = "case.edu";
-            String directory = "/schools/";
+            String hostname = null;
+            String directory = null;
 
             try {
                 // strip "http://"
+
                 String domain = requestedURL.substring(7, requestedURL.length());
                 count = domain.indexOf("/");
 
-                // hostname = www.case.edu
                 hostname = domain.substring(0, count);
+                ipAddr = InetAddress.getByName(hostname);
 
                 // the requested file:
                 directory = domain.substring(count, domain.length());
 
-                System.out.println(directory);
             } catch (Exception e) {
-                System.err.println(e.getMessage());
+                System.err.println("< ERR! >: URL " + requestedURL + " cannot be processed: " + e.getMessage());
             }
-
 
             // Here starts the sweet part
             // start connection with URL on port 80
             // *HTTPS (port 443) not supported
+
             Socket connectionSocket = new Socket(hostname, 80);
 
+            hProxy.getDNSRecord(hostname);
+
             // server sends GET request to host, using given directory
+
             PrintWriter server = new PrintWriter(new BufferedWriter(new OutputStreamWriter(connectionSocket.getOutputStream())));
             server.println("GET " + directory + " HTTP/1.1");
+            for (int i = 0; i < httpRequest.size(); i++) {
+                server.println(httpRequest.get(i));
+            }
 
             // tell me what we have
-            // server.println();
-
-            // flush out to safely end the program
+            server.println();
             server.flush();
 
             // read from the URL into this stream
@@ -110,6 +122,7 @@ public class hProxyThreadSilent extends Thread {
         }
         catch (Exception e) {
             // gotta catch em all
+            System.err.println("< ERR! >: Error occurred: " + e.getMessage());
         }
     }
 

@@ -11,11 +11,11 @@ import java.util.*;
  *
  */
 public class hProxy {
-    // {hostname => CNAME}
+    // {hostname => (IP Address, TTL)}
     public static Hashtable<String, Tuple> record = new Hashtable<String, Tuple>();
-    Timer timer = new Timer();
 
     private static boolean silentMode = false;
+    private static final long TTL = 30000;
 
     // program would be run in a way:
     // $ javac proxyd.java
@@ -25,7 +25,7 @@ public class hProxy {
         // the default port to use if no port is specified
         int port = 5016;
 
-        System.out.println("<SYSTEM>: hProxy v1.0 initiated...");
+        System.out.println("<SYSTEM>: hProxy v1.2 initiated...");
 
         // check argument and start at given port or default port, or give error if arguments are invalid.
         if (checkArguments(args)) {
@@ -103,17 +103,30 @@ public class hProxy {
         System.exit(-1);
     }
 
-
-    // DNS Patch
+    /**
+     * addDNSRecord adds the DNS resolution to our record.
+     * @param hostname the hostname
+     * @param ipAddress the IP address of that host
+     */
+    public static InetAddress addDNSRecord(String hostname, InetAddress ipAddress) {
+        record.put(hostname, new Tuple(ipAddress, System.currentTimeMillis()));
+        return ipAddress;
+    }
 
     /**
-     * checks if hostname is recorded in DNS. If so, decrease TTL by 1 second, else add a new record.
+     * getDNSRecord checks whether the DNS resolution for given hostname exists, returns if so, else adds a new record.
      * @param hostname the hostname
-     * @param ipaddress the IP address of that host
+     * @return the ipAddress (InetAddress) of the host
+     * @throws Exception when sum ting wong
      */
-    public static void addDNSRecord(String hostname, String ipaddress) {
-        if (record.get(hostname) != null) {
-            record.put(hostname, new Tuple(ipaddress, System.currentTimeMillis()));
+    public static InetAddress getDNSRecord(String hostname) throws Exception {
+        if (record.get(hostname) != null && (System.currentTimeMillis() - record.get(hostname).TTL < TTL)) {
+            System.out.println("<SYSTEM>: hDNS resolution for " + hostname + " found.");
+            return record.get(hostname).ipAddress;
+        } else {
+            addDNSRecord(hostname, InetAddress.getByName(hostname));
+            System.out.println("<SYSTEM>: hDNS resolution for " + hostname + " added.");
+            return InetAddress.getByName(hostname);
         }
     }
 }

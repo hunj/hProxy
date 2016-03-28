@@ -2,7 +2,7 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
-public class hProxyThread extends Thread {
+class hProxyThread extends Thread {
 
     // socket connects to the browser
     private Socket socket;
@@ -10,7 +10,7 @@ public class hProxyThread extends Thread {
     // the URL and port to connect; usually port is 80.
     String requestURL;
     private int port;
-    String ipAddr;
+    InetAddress ipAddr;
 
     // configuration
     private static final int BUFFER_SIZE = 4096;
@@ -67,26 +67,23 @@ public class hProxyThread extends Thread {
 
 
             // default/example
-            String hostname = "-";
-            String directory = "-";
+            String hostname = null;
+            String directory = null;
 
             try {
                 // strip "http://"
 
                 String domain = requestedURL.substring(7, requestedURL.length());
-//                ipAddr = InetAddress.getByName(requestedURL).toString();
-
                 count = domain.indexOf("/");
 
-                // hostname = www.case.edu
                 hostname = domain.substring(0, count);
-                System.out.println("<SYSTEM>: Socket for " + hostname);
-
+                ipAddr = InetAddress.getByName(hostname);
+                System.out.println("<SYSTEM>: Socket for " + ipAddr);
 
                 // the requested file:
                 directory = domain.substring(count, domain.length());
 
-                System.out.println(directory);
+//                System.out.println(directory);
             } catch (Exception e) {
                 System.err.println("< ERR! >: URL " + requestedURL + " cannot be processed: " + e.getMessage());
             }
@@ -97,19 +94,9 @@ public class hProxyThread extends Thread {
 
             Socket connectionSocket = new Socket(hostname, 80);
             System.out.println("<SYSTEM>: Checking hDNS resolution for " + hostname);
-            if (hProxy.record.containsKey(hostname)) {
-                if (System.currentTimeMillis() - hProxy.record.get(hostname).TTL < TTL) {
-                    System.out.println("<SYSTEM>: hDNS resolution for " + hostname + " found; IP address is: " + ipAddr);;
-                    connectionSocket = new Socket(hProxy.record.get(hostname).ipAddress, 80);
-                } else {
-                    System.out.println("<SYSTEM>: hDNS resolution for " + hostname + " added; IP address is: " + ipAddr);;
-                    hProxy.addDNSRecord(hostname, ipAddr);
-                }
-            }
 
+            hProxy.getDNSRecord(hostname);
             System.out.println("<SYSTEM>: Socket successfully created.");
-
-
 
             // server sends GET request to host, using given directory
 
@@ -122,8 +109,6 @@ public class hProxyThread extends Thread {
 
             // tell me what we have
             server.println();
-
-            // flush out
             server.flush();
 
             // read from the URL into this stream
