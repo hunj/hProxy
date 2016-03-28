@@ -1,7 +1,7 @@
 # hProxy
 ## a simple Java proxy that will run on your own computer/server
 
-Hun Jae Lee (hxl224) EECS325 Project1 due 160322
+Made as a project for EECS325: Computer Networks class at Case Western Reserve University, Spring semester of 2016.
 
 ## Instructions
 
@@ -10,7 +10,7 @@ Hun Jae Lee (hxl224) EECS325 Project1 due 160322
 - UNIX based OS (not tested on Windows), Mac OS X preferred
 
 ### Running
-- To run, simply do the following: 
+- To run, simply do the following in console: 
 
 ```
 $ javac *.java; java proxyd -p ###
@@ -39,6 +39,7 @@ You need to manually pause Dropbox, or the proxy will keep printing out error me
 
 Sites tested:
 
-- cnn.com (takes a while to load)
-- case.edu (takes a while to load)
-- naver.com
+- [cnn.com](http://cnn.com) (takes a while to load)
+- [case.edu](http://case.edu) (takes a while to load)
+- [naver.com](http://naver.com)
+- [hunj.me](http://hunj.me)
